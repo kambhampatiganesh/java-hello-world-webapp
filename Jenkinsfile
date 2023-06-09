@@ -1,28 +1,29 @@
- 
- pipeline {
-   agent any
-   stages{ 
-     stage("Git checkout") {
+pipeline{
+  agent any
+  tools {
+    maven 'Maven3'
+  }
+  stages{
+    stage("Git Checkout"){
+      steps{
+         git branch: 'master', credentialsId: 'github-ID', url: 'https://github.com/demodevops2/java-hello-world-webapp.git'
+}
+}
+   stage("Maven Build"){
      steps{
-          git 'https://github.com/demodevops2/java-hello-world-webapp.git'
-          }
-     }
+         sh "mvn clean package"
+         sh "mv target/*.war target/myweb.war"
+}
+}
 
-     stage("Build stage") {
-     steps{
-           sh 'mvn clean package'
-           sh 'mv target/*.war target/myweb.war'
-          }
-     
-     }
+    stage("Deploy-war-file"){
+      steps{
+        sshagent(['Tomcat-EC2-ID']) {
+          sh "scp -o StrictHostKeyChecking=no target/myweb.war ubuntu@172.31.5.222:/var/lib/tomcat9/webapps"
+    
+}
+}
+}
 
-     stage("war file deploy"){
-     steps{
-     sshagent(['ec2-tomcat-cred-id']) {
-        sh "scp -o StrictHostKeyChecking=no target/myweb.war ubuntu@172.31.7.110:/var/lib/tomcat8/webapps"
-        }
-     }
-     }
-
-      }
+}
 }
